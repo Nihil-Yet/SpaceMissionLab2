@@ -1,0 +1,9 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="SpaceMission.Views.InfoDialog"
+        Title="Mission Details" Width="450" Height="350">
+    <StackPanel Margin="10">
+        <TextBlock Text="{Binding Info}" TextWrapping="Wrap"/>
+        <Button Content="OK" Click="OkClick" Margin="0,20,0,0"/>
+    </StackPanel>
+</Window>

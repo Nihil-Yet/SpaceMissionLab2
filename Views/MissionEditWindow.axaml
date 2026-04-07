@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="SpaceMission.Views.MissionEditWindow"
+        Title="Edit Mission" Width="500" Height="550">
+    <StackPanel Margin="10">
+        <TextBlock Text="Name:"/>
+        <TextBox Text="{Binding Name}"/>
+        <TextBlock Text="Budget:"/>
+        <TextBox Text="{Binding Budget}"/>
+        <TextBlock Text="Duration (days):"/>
+        <TextBox Text="{Binding Duration}"/>
+
+        <StackPanel IsVisible="{Binding IsOrbital}">
+            <TextBlock Text="Orbital Parameters" FontWeight="Bold" Margin="0,10,0,5"/>
+            <TextBlock Text="Current Height (km):"/>
+            <TextBox Text="{Binding CurrHeight}"/>
+            <TextBlock Text="Target Height (km):"/>
+            <TextBox Text="{Binding TargetHeight}"/>
+            <TextBlock Text="Inclination (deg):"/>
+            <TextBox Text="{Binding Inclination}"/>
+            <TextBlock Text="Energy Source:"/>
+            <ComboBox ItemsSource="{Binding EnergySources}" SelectedItem="{Binding EnergySource}"/>
+        </StackPanel>
+
+        <StackPanel IsVisible="{Binding IsPlanetary}">
+            <TextBlock Text="Planetary Parameters" FontWeight="Bold" Margin="0,10,0,5"/>
+            <TextBlock Text="Planet:"/>
+            <TextBox Text="{Binding Planet}"/>
+            <TextBlock Text="Atmo Density (0-255):"/>
+            <TextBox Text="{Binding AtmoDensity}"/>
+            <TextBlock Text="Landing Point Name:"/>
+            <TextBox Text="{Binding LandingPointName}"/>
+            <TextBlock Text="X:"/>
+            <TextBox Text="{Binding LandingPointX}"/>
+            <TextBlock Text="Y:"/>
+            <TextBox Text="{Binding LandingPointY}"/>
+            <TextBlock Text="R:"/>
+            <TextBox Text="{Binding LandingPointR}"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+            <Button Content="Save" Command="{Binding SaveCommand}" Margin="0,0,10,0"/>
+            <Button Content="Cancel" Click="CancelClick"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

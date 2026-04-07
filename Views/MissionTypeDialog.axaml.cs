@@ -14,7 +14,8 @@ namespace SpaceMission.Views
 
         private void OkClick(object sender, RoutedEventArgs e)
         {
-            SelectedType = (TypeCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Orbital";
+            if (TypeCombo.SelectedItem is ComboBoxItem item)
+                SelectedType = item.Content?.ToString() ?? "Orbital";
             Close(true);
         }
     }
