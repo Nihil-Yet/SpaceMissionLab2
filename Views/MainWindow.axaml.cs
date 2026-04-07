@@ -1,11 +1,13 @@
-using Avalonia.Controls;
+using Avalonia.ReactiveUI;
+using SpaceMission.ViewModels;
 
-namespace SpaceMission.Views;
-
-public partial class MainWindow : Window
+namespace SpaceMission.Views
 {
-    public MainWindow()
+    public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
-        InitializeComponent();
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
     }
 }

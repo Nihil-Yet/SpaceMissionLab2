@@ -1,20 +1,41 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:SpaceMission.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:SpaceMission.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="SpaceMission.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="SpaceMission">
-
+        Title="Space Mission Manager">
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_Missions">
+                <MenuItem Header="Add" Command="{Binding AddMissionCommand}" />
+                <MenuItem Header="Edit" Command="{Binding EditMissionCommand}" />
+                <MenuItem Header="Delete" Command="{Binding DeleteMissionCommand}" />
+                <MenuItem Header="Details" Command="{Binding ShowDetailsCommand}" />
+            </MenuItem>
+        </Menu>
 
+        <StackPanel DockPanel.Dock="Right" Margin="10">
+            <Button Command="{Binding AddMissionCommand}" Content="Add" Margin="0,0,0,5"/>
+            <Button Command="{Binding EditMissionCommand}" Content="Edit" Margin="0,0,0,5"/>
+            <Button Command="{Binding DeleteMissionCommand}" Content="Delete" Margin="0,0,0,5"/>
+            <Button Command="{Binding ShowDetailsCommand}" Content="Details" Margin="0,0,0,5"/>
+            <Button Command="{Binding LoadMissionsCommand}" Content="Refresh" Margin="0,0,0,5"/>
+        </StackPanel>
+
+        <DataGrid ItemsSource="{Binding Missions}" SelectedItem="{Binding SelectedMission}" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding MissionType}" Width="100"/>
+                <DataGridTextColumn Header="Budget" Binding="{Binding Budget}" Width="100"/>
+                <DataGridTextColumn Header="Duration" Binding="{Binding Duration}" Width="100"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
 </Window>

@@ -1,47 +1,49 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
-using Avalonia.Data.Core.Plugins;
-using System.Linq;
 using Avalonia.Markup.Xaml;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using SpaceMission.Data;
+using SpaceMission.Services;
 using SpaceMission.ViewModels;
 using SpaceMission.Views;
+using System;
 
-namespace SpaceMission;
-
-public partial class App : Application
+namespace SpaceMission
 {
-    public override void Initialize()
+    public class App : Application
     {
-        AvaloniaXamlLoader.Load(this);
-    }
+        public static IServiceProvider Services { get; private set; }
 
-    public override void OnFrameworkInitializationCompleted()
-    {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        public override void Initialize()
         {
-            // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
-            // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
-            DisableAvaloniaDataAnnotationValidation();
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new MainWindowViewModel(),
-            };
+            AvaloniaXamlLoader.Load(this);
         }
 
-        base.OnFrameworkInitializationCompleted();
-    }
-
-    private void DisableAvaloniaDataAnnotationValidation()
-    {
-        // Get an array of plugins to remove
-        var dataValidationPluginsToRemove =
-            BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
-
-        // remove each entry found
-        foreach (var plugin in dataValidationPluginsToRemove)
+        public override void OnFrameworkInitializationCompleted()
         {
-            BindingPlugins.DataValidators.Remove(plugin);
+            var services = new ServiceCollection();
+
+            // SQLite
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlite("Data Source=missions.db"));
+
+            services.AddScoped<IMissionRepository, MissionRepository>();
+            services.AddSingleton<IPlanetaryData, EarthData>();
+
+            services.AddTransient<MainWindowViewModel>();
+
+            Services = services.BuildServiceProvider();
+
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.MainWindow = new MainWindow
+                {
+                    DataContext = Services.GetRequiredService<MainWindowViewModel>()
+                };
+            }
+
+            base.OnFrameworkInitializationCompleted();
         }
     }
 }
