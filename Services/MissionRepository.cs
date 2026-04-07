@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SpaceMission.Data;
-using SpaceMission.Models; // здесь лежат твои Mission, OrbitalMission, PlanetaryMission
-using System;
+using SpaceMission.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +10,7 @@ namespace SpaceMission.Services
     public interface IMissionRepository
     {
         Task<List<Mission>> GetAllAsync();
-        Task<Mission> GetByIdAsync(int id);
+        Task<Mission?> GetByIdAsync(int id);
         Task AddAsync(Mission mission);
         Task UpdateAsync(Mission mission);
         Task DeleteAsync(int id);
@@ -20,7 +19,7 @@ namespace SpaceMission.Services
     public class MissionRepository : IMissionRepository
     {
         private readonly ApplicationDbContext _context;
-        private readonly IPlanetaryData _earthData; // для создания OrbitalMission
+        private readonly IPlanetaryData _earthData;
 
         public MissionRepository(ApplicationDbContext context, IPlanetaryData earthData)
         {
@@ -31,10 +30,10 @@ namespace SpaceMission.Services
         public async Task<List<Mission>> GetAllAsync()
         {
             var entities = await _context.Missions.ToListAsync();
-            return entities.Select(ToMission).ToList();
+            return entities.Select(ToMission).Where(m => m != null).Cast<Mission>().ToList();
         }
 
-        public async Task<Mission> GetByIdAsync(int id)
+        public async Task<Mission?> GetByIdAsync(int id)
         {
             var entity = await _context.Missions.FindAsync(id);
             return entity == null ? null : ToMission(entity);
@@ -45,6 +44,7 @@ namespace SpaceMission.Services
             var entity = ToEntity(mission);
             await _context.Missions.AddAsync(entity);
             await _context.SaveChangesAsync();
+            mission.Id = entity.Id;
         }
 
         public async Task UpdateAsync(Mission mission)
@@ -68,32 +68,35 @@ namespace SpaceMission.Services
             }
         }
 
-        // Преобразование Entity → Mission (твоя модель)
-        private Mission ToMission(MissionEntity e)
+        private Mission? ToMission(MissionEntity e)
         {
-            if (e.MissionType == "Orbital")
+            if (e.MissionType == (int)MissionT.Orbital)
             {
-                return new OrbitalMission(
+                var mission = new OrbitalMission(
                     e.Name, e.Budget, e.Duration,
                     e.CurrHeight ?? 500,
                     e.TargetHeight ?? 500,
                     e.Inclination ?? 0,
-                    Enum.Parse<EnergySource>(e.EnergySource ?? "Solar"),
+                    (EnergySource)(e.EnergySource ?? 0),
                     _earthData
                 );
+                mission.Id = e.Id;
+                return mission;
             }
-            else // Planetary
+            else if (e.MissionType == (int)MissionT.Planetary)
             {
-                return new PlanetaryMission(
+                var mission = new PlanetaryMission(
                     e.Name, e.Budget, e.Duration,
                     e.Planet ?? "Mars",
                     e.AtmoDensity ?? 100,
                     new LandingPoint(e.LandingPointName ?? "Default", e.LandingPointX ?? 0, e.LandingPointY ?? 0, e.LandingPointR ?? 0)
                 );
+                mission.Id = e.Id;
+                return mission;
             }
+            return null;
         }
 
-        // Преобразование Mission → Entity
         private MissionEntity ToEntity(Mission m)
         {
             var e = new MissionEntity
@@ -101,20 +104,19 @@ namespace SpaceMission.Services
                 Id = m.Id,
                 Name = m.Name,
                 Budget = m.Budget,
-                Duration = m.Duration
+                Duration = m.Duration,
+                MissionType = (int)m.MissionType
             };
 
             if (m is OrbitalMission o)
             {
-                e.MissionType = "Orbital";
                 e.CurrHeight = o.CurrHeight;
                 e.TargetHeight = o.TargetHeight;
                 e.Inclination = o.Inclination;
-                e.EnergySource = o.EnergySource.ToString();
+                e.EnergySource = (int)o.EnergySource;
             }
             else if (m is PlanetaryMission p)
             {
-                e.MissionType = "Planetary";
                 e.Planet = p.Planet;
                 e.AtmoDensity = p.AtmoDensity;
                 e.LandingPointName = p.LandingPoint.Name;
@@ -136,7 +138,7 @@ namespace SpaceMission.Services
                 entity.CurrHeight = o.CurrHeight;
                 entity.TargetHeight = o.TargetHeight;
                 entity.Inclination = o.Inclination;
-                entity.EnergySource = o.EnergySource.ToString();
+                entity.EnergySource = (int)o.EnergySource;
             }
             else if (m is PlanetaryMission p)
             {
