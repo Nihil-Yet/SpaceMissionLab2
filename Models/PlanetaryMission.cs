@@ -1,6 +1,6 @@
 using System;
 
-namespace SpaceMission
+namespace SpaceMission.Models
 {
     public struct LandingPoint
     {
@@ -24,6 +24,24 @@ namespace SpaceMission
         private byte atmoDensity;   // 0 = none, 255 = very dense
         private LandingPoint landingPoint;
 
+        public string Planet
+        {
+            get => planet;
+            set => planet = value;
+        }
+
+        public byte AtmoDensity
+        {
+            get => atmoDensity;
+            set => atmoDensity = value;
+        }
+
+        public LandingPoint LandingPoint
+        {
+            get => landingPoint;
+            set => landingPoint = value;
+        }
+
         // Constructors
         public PlanetaryMission()
             : base("None", 0, 0)
@@ -31,6 +49,7 @@ namespace SpaceMission
             planet = "None";
             atmoDensity = 0;
             landingPoint = new LandingPoint("None", 0, 0, 0);
+            MissionType = MissionT.Planetary;
         }
 
         public PlanetaryMission(string name,
@@ -40,6 +59,7 @@ namespace SpaceMission
             this.planet = planet;
             atmoDensity = 100;
             landingPoint = new LandingPoint("Default", 0, 0, 0);
+            MissionType = MissionT.Planetary;
         }
 
         public PlanetaryMission(string name,
@@ -51,6 +71,7 @@ namespace SpaceMission
             this.planet = planet;
             this.atmoDensity = atmoDensity;
             this.landingPoint = landingPoint;
+            MissionType = MissionT.Planetary;
         }
 
         // Own methods

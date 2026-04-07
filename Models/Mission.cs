@@ -1,17 +1,40 @@
-namespace SpaceMission
+namespace SpaceMission.Models
 {
-    public abstract class Mission
+    public enum MissionT
     {
+        Unknow,
+        Orbital,
+        Planetary
+    }
+
+    public abstract class Mission
+    {        
+        public int Id { get; set; }
+
         protected string name;
         protected int budget;
         protected int duration;
 
-/*
-        public string Name {
-            get { return name; }
-            set { name = value; }
+        // геттеры/сеттеры
+        public string Name 
+        { 
+            get => name; 
+            set => name = value; 
         }
-*/
+
+        public int Budget 
+        { 
+            get => budget; 
+            set => budget = value; 
+        }
+
+        public int Duration 
+        { 
+            get => duration; 
+            set => duration = value; 
+        }
+
+        public MissionT MissionType { get; set; }
 
         public Mission(string name, int budget, int duration)
         {
@@ -34,7 +57,6 @@ namespace SpaceMission
         public abstract double CalcFuelConsumption();
         public abstract float CalcRisk();
 
-        // Virtual so derived classes can call base.GetInfo()
         public virtual string GetInfo()
         {
             return $"Mission name: {name}\n" +

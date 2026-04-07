@@ -1,6 +1,6 @@
 using System;
 
-namespace SpaceMission
+namespace SpaceMission.Models
 {
     public enum EnergySource
     {
@@ -33,31 +33,61 @@ namespace SpaceMission
         private EnergySource energySource;
         private IPlanetaryData planetaryData;
 
+        // геттеры/сеттеры
+        public double CurrHeight
+        {
+            get => currHeight;
+            set => currHeight = value;
+        }
+
+        public double TargetHeight
+        {
+            get => targetHeight;
+            set => targetHeight = value;
+        }
+
+        public double Inclination
+        {
+            get => inclination;
+            set => inclination = value;
+        }
+
+        public EnergySource EnergySource
+        {
+            get => energySource;
+            set => energySource = value;
+        }
+
+        public IPlanetaryData PlanetaryData
+        {
+            get => planetaryData;
+            set => planetaryData = value;
+        }
+
         // Конструкторы
-        public OrbitalMission()
-            : base("None", 0, 0)
+        public OrbitalMission() : base("None", 0, 0)
         {
             currHeight = 0.0;
             targetHeight = 0.0;
             inclination = 0.0;
             energySource = EnergySource.None;
             planetaryData = new EarthData();
+            MissionType = MissionT.Orbital;
         }
 
-        public OrbitalMission(string name, int budget)
-            : base(name, budget, 180)
+        public OrbitalMission(string name, int budget) : base(name, budget, 180)
         {
             currHeight = 500.0;
             targetHeight = 500.0;
             inclination = 0.0;
             energySource = EnergySource.Solar;
             planetaryData = new EarthData();
+            MissionType = MissionT.Orbital;
         }
 
-        public OrbitalMission(string name, 
-                int budget, int duration,
-                double currHeight, double targetHeight, double inclination,
-                EnergySource energySource, IPlanetaryData planetaryData)
+        public OrbitalMission(string name, int budget, int duration,
+                              double currHeight, double targetHeight, double inclination,
+                              EnergySource energySource, IPlanetaryData planetaryData)
             : base(name, budget, duration)
         {
             this.currHeight = currHeight;
@@ -65,6 +95,7 @@ namespace SpaceMission
             this.inclination = inclination;
             this.energySource = energySource;
             this.planetaryData = planetaryData;
+            MissionType = MissionT.Orbital;
         }
 
         private string StrEnergySource()
