@@ -13,7 +13,7 @@ namespace SpaceMission
 {
     public class App : Application
     {
-        public static IServiceProvider Services { get; private set; }
+        public static IServiceProvider? Services { get; private set; }
 
         public override void Initialize()
         {
@@ -24,13 +24,11 @@ namespace SpaceMission
         {
             var services = new ServiceCollection();
 
-            // SQLite
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite("Data Source=missions.db"));
 
             services.AddScoped<IMissionRepository, MissionRepository>();
             services.AddSingleton<IPlanetaryData, EarthData>();
-
             services.AddTransient<MainWindowViewModel>();
 
             Services = services.BuildServiceProvider();
