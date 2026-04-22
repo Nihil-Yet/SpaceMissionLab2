@@ -11,10 +11,6 @@ namespace SpaceMission.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<MissionEntity>()
-                .HasDiscriminator<int>("MissionType")
-                .HasValue<MissionEntity>((int)Models.MissionT.Orbital)
-                .HasValue<MissionEntity>((int)Models.MissionT.Planetary);
         }
     }
 }

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using SpaceMission.ViewModels;
 
 namespace SpaceMission.Views
 {
@@ -8,6 +9,12 @@ namespace SpaceMission.Views
         public MissionEditWindow()
         {
             InitializeComponent();
+        }
+
+        private void SaveClick(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MissionEditViewModel vm) vm.SaveCommand.Execute(null);
+            Close(true);
         }
 
         private void CancelClick(object sender, RoutedEventArgs e)

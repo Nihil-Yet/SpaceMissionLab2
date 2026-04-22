@@ -39,7 +39,7 @@
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
-            <Button Content="Save" Command="{Binding SaveCommand}" Margin="0,0,10,0"/>
+            <Button Content="Save" Click="SaveClick" Margin="0,0,10,0"/>
             <Button Content="Cancel" Click="CancelClick"/>
         </StackPanel>
     </StackPanel>
