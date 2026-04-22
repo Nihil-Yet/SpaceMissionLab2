@@ -32,8 +32,6 @@ namespace SpaceMission.ViewModels
             EditMissionCommand = new AsyncRelayCommand(EditMission, () => SelectedMission != null);
             DeleteMissionCommand = new AsyncRelayCommand(DeleteMission, () => SelectedMission != null);
             ShowDetailsCommand = new AsyncRelayCommand(ShowDetails, () => SelectedMission != null);
-
-            Task.Run(() => LoadMissionsCommand.Execute(null));
         }
 
         public IAsyncRelayCommand LoadMissionsCommand { get; }
@@ -42,12 +40,28 @@ namespace SpaceMission.ViewModels
         public IAsyncRelayCommand DeleteMissionCommand { get; }
         public IAsyncRelayCommand ShowDetailsCommand { get; }
 
+        partial void OnSelectedMissionChanged(Mission? value)
+        {
+            (EditMissionCommand as AsyncRelayCommand)?.NotifyCanExecuteChanged();
+            (DeleteMissionCommand as AsyncRelayCommand)?.NotifyCanExecuteChanged();
+            (ShowDetailsCommand as AsyncRelayCommand)?.NotifyCanExecuteChanged();
+        }
+
         private async Task LoadMissions()
         {
-            var missions = await _repository.GetAllAsync();
-            Missions.Clear();
-            foreach (var m in missions)
-                Missions.Add(m);
+            try
+            {
+                var missions = await _repository.GetAllAsync();
+                Console.WriteLine
+                    ($"Loaded {missions.Count} missions");
+                Missions.Clear();
+                foreach (var m in missions)
+                    Missions.Add(m);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading: {ex.Message}");
+            }
         }
 
         private async Task AddMission()

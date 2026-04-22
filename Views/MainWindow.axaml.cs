@@ -8,6 +8,11 @@ namespace SpaceMission.Views
         public MainWindow()
         {
             InitializeComponent();
+            Loaded += async (s, e) =>
+            {
+                if (DataContext is MainWindowViewModel vm)
+                    await vm.LoadMissionsCommand.ExecuteAsync(null);
+            };
         }
     }
 }
