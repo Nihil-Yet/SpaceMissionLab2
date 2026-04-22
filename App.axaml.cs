@@ -33,6 +33,13 @@ namespace SpaceMission
 
             Services = services.BuildServiceProvider();
 
+            // Инициализация базы данных
+            using (var scope = Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                dbContext.Database.EnsureCreated();   // создаст таблицы, если их нет
+            }
+
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = new MainWindow
