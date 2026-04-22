@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
+using System.Collections.Generic;
+using SpaceMission.Models;
 
 namespace SpaceMission.ViewModels
 {
@@ -9,7 +10,7 @@ namespace SpaceMission.ViewModels
         private readonly Mission _mission;
         private readonly IPlanetaryData _earthData;
 
-        [ObservableProperty] private string _name;
+        [ObservableProperty] private string _name = string.Empty;
         [ObservableProperty] private int _budget;
         [ObservableProperty] private int _duration;
 
@@ -19,15 +20,18 @@ namespace SpaceMission.ViewModels
         [ObservableProperty] private double _targetHeight;
         [ObservableProperty] private double _inclination;
         [ObservableProperty] private EnergySource _energySource;
+        public List<EnergySource> EnergySources { get; } = new List<EnergySource> { EnergySource.None, EnergySource.RTG, EnergySource.Solar };
 
         // Planetary
         [ObservableProperty] private bool _isPlanetary;
-        [ObservableProperty] private string _planet;
+        [ObservableProperty] private string _planet = string.Empty;
         [ObservableProperty] private byte _atmoDensity;
-        [ObservableProperty] private string _landingPointName;
+        [ObservableProperty] private string _landingPointName = string.Empty;
         [ObservableProperty] private short _landingPointX;
         [ObservableProperty] private short _landingPointY;
         [ObservableProperty] private short _landingPointR;
+
+        public IRelayCommand SaveCommand { get; }
 
         public MissionEditViewModel(Mission mission, IPlanetaryData earthData)
         {
@@ -56,9 +60,10 @@ namespace SpaceMission.ViewModels
                 LandingPointY = pm.LandingPoint.Y;
                 LandingPointR = pm.LandingPoint.R;
             }
+
+            SaveCommand = new RelayCommand(Save);
         }
 
-        [RelayCommand]
         private void Save()
         {
             _mission.Name = Name;
@@ -71,8 +76,6 @@ namespace SpaceMission.ViewModels
                 om.TargetHeight = TargetHeight;
                 om.Inclination = Inclination;
                 om.EnergySource = EnergySource;
-                // planetaryData не сохраняется в БД, но нужно для расчётов
-                // оно уже установлено в репозитории
             }
             else if (_mission is PlanetaryMission pm)
             {
