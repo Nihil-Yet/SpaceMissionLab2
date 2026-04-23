@@ -87,7 +87,7 @@ namespace SpaceMission.Services
             {
                 var mission = new PlanetaryMission(
                     e.Name, e.Budget, e.Duration,
-                    e.Planet ?? "Mars",
+                    e.Planet ?? "Unknown",
                     e.AtmoDensity ?? 100,
                     new LandingPoint(e.LandingPointName ?? "Default", e.LandingPointX ?? 0, e.LandingPointY ?? 0, e.LandingPointR ?? 0)
                 );
