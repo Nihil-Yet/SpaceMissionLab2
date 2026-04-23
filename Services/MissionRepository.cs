@@ -29,126 +29,139 @@ namespace SpaceMission.Services
 
         public async Task<List<Mission>> GetAllAsync()
         {
-            var entities = await _context.Missions.ToListAsync();
-            return entities.Select(ToMission).Where(m => m != null).Cast<Mission>().ToList();
+            var bases = await _context.Missions
+                .Include(m => m.Orbital)
+                .Include(m => m.Planetary)
+                .ToListAsync();
+
+            return bases.Select(ToMission).Where(m => m != null).Cast<Mission>().ToList();
         }
 
         public async Task<Mission?> GetByIdAsync(int id)
         {
-            var entity = await _context.Missions.FindAsync(id);
-            return entity == null ? null : ToMission(entity);
+            var baseMission = await _context.Missions
+                .Include(m => m.Orbital)
+                .Include(m => m.Planetary)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            return baseMission == null ? null : ToMission(baseMission);
         }
 
         public async Task AddAsync(Mission mission)
         {
-            var entity = ToEntity(mission);
-            await _context.Missions.AddAsync(entity);
+            var baseEntity = new MissionBase
+            {
+                Name = mission.Name,
+                Budget = mission.Budget,
+                Duration = mission.Duration,
+                MissionType = (int)mission.MissionType
+            };
+
+            if (mission is OrbitalMission o)
+            {
+                baseEntity.Orbital = new OrbitalMissionEntity
+                {
+                    CurrHeight = o.CurrHeight,
+                    TargetHeight = o.TargetHeight,
+                    Inclination = o.Inclination,
+                    EnergySource = (int)o.EnergySource
+                };
+            }
+            else if (mission is PlanetaryMission p)
+            {
+                baseEntity.Planetary = new PlanetaryMissionEntity
+                {
+                    Planet = p.Planet,
+                    AtmoDensity = p.AtmoDensity,
+                    LandingPointName = p.LandingPoint.Name,
+                    LandingPointX = p.LandingPoint.X,
+                    LandingPointY = p.LandingPoint.Y,
+                    LandingPointR = p.LandingPoint.R
+                };
+            }
+
+            _context.Missions.Add(baseEntity);
             await _context.SaveChangesAsync();
-            mission.Id = entity.Id;
+            mission.Id = baseEntity.Id;
         }
 
         public async Task UpdateAsync(Mission mission)
         {
-            var entity = await _context.Missions.FindAsync(mission.Id);
-            if (entity != null)
+            var baseEntity = await _context.Missions
+                .Include(m => m.Orbital)
+                .Include(m => m.Planetary)
+                .FirstOrDefaultAsync(m => m.Id == mission.Id);
+
+            if (baseEntity == null) return;
+
+            baseEntity.Name = mission.Name;
+            baseEntity.Budget = mission.Budget;
+            baseEntity.Duration = mission.Duration;
+            baseEntity.MissionType = (int)mission.MissionType;
+
+            if (mission is OrbitalMission o)
             {
-                UpdateEntity(entity, mission);
-                _context.Missions.Update(entity);
-                await _context.SaveChangesAsync();
+                if (baseEntity.Orbital == null)
+                    baseEntity.Orbital = new OrbitalMissionEntity();
+                baseEntity.Orbital.CurrHeight = o.CurrHeight;
+                baseEntity.Orbital.TargetHeight = o.TargetHeight;
+                baseEntity.Orbital.Inclination = o.Inclination;
+                baseEntity.Orbital.EnergySource = (int)o.EnergySource;
+                // Если раньше был Planetary – удаляем
+                if (baseEntity.Planetary != null)
+                    _context.PlanetaryMissions.Remove(baseEntity.Planetary);
             }
+            else if (mission is PlanetaryMission p)
+            {
+                if (baseEntity.Planetary == null)
+                    baseEntity.Planetary = new PlanetaryMissionEntity();
+                baseEntity.Planetary.Planet = p.Planet;
+                baseEntity.Planetary.AtmoDensity = p.AtmoDensity;
+                baseEntity.Planetary.LandingPointName = p.LandingPoint.Name;
+                baseEntity.Planetary.LandingPointX = p.LandingPoint.X;
+                baseEntity.Planetary.LandingPointY = p.LandingPoint.Y;
+                baseEntity.Planetary.LandingPointR = p.LandingPoint.R;
+                if (baseEntity.Orbital != null)
+                    _context.OrbitalMissions.Remove(baseEntity.Orbital);
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var entity = await _context.Missions.FindAsync(id);
-            if (entity != null)
+            var baseEntity = await _context.Missions.FindAsync(id);
+            if (baseEntity != null)
             {
-                _context.Missions.Remove(entity);
+                _context.Missions.Remove(baseEntity);
                 await _context.SaveChangesAsync();
             }
         }
 
-        private Mission? ToMission(MissionEntity e)
+        private Mission? ToMission(MissionBase e)
         {
-            if (e.MissionType == (int)MissionT.Orbital)
+            if (e.MissionType == (int)MissionT.Orbital && e.Orbital != null)
             {
                 var mission = new OrbitalMission(
                     e.Name, e.Budget, e.Duration,
-                    e.CurrHeight ?? 500,
-                    e.TargetHeight ?? 500,
-                    e.Inclination ?? 0,
-                    (EnergySource)(e.EnergySource ?? 0),
-                    _earthData
-                );
+                    e.Orbital.CurrHeight, e.Orbital.TargetHeight, e.Orbital.Inclination,
+                    (EnergySource)e.Orbital.EnergySource, _earthData);
                 mission.Id = e.Id;
                 return mission;
             }
-            else if (e.MissionType == (int)MissionT.Planetary)
+            else if (e.MissionType == (int)MissionT.Planetary && e.Planetary != null)
             {
+                var lp = new LandingPoint(
+                    e.Planetary.LandingPointName,
+                    e.Planetary.LandingPointX,
+                    e.Planetary.LandingPointY,
+                    e.Planetary.LandingPointR);
                 var mission = new PlanetaryMission(
                     e.Name, e.Budget, e.Duration,
-                    e.Planet ?? "Unknown",
-                    e.AtmoDensity ?? 100,
-                    new LandingPoint(e.LandingPointName ?? "Default", e.LandingPointX ?? 0, e.LandingPointY ?? 0, e.LandingPointR ?? 0)
-                );
+                    e.Planetary.Planet, e.Planetary.AtmoDensity, lp);
                 mission.Id = e.Id;
                 return mission;
             }
             return null;
-        }
-
-        private MissionEntity ToEntity(Mission m)
-        {
-            var e = new MissionEntity
-            {
-                Id = m.Id,
-                Name = m.Name,
-                Budget = m.Budget,
-                Duration = m.Duration,
-                MissionType = (int)m.MissionType
-            };
-
-            if (m is OrbitalMission o)
-            {
-                e.CurrHeight = o.CurrHeight;
-                e.TargetHeight = o.TargetHeight;
-                e.Inclination = o.Inclination;
-                e.EnergySource = (int)o.EnergySource;
-            }
-            else if (m is PlanetaryMission p)
-            {
-                e.Planet = p.Planet;
-                e.AtmoDensity = p.AtmoDensity;
-                e.LandingPointName = p.LandingPoint.Name;
-                e.LandingPointX = p.LandingPoint.X;
-                e.LandingPointY = p.LandingPoint.Y;
-                e.LandingPointR = p.LandingPoint.R;
-            }
-            return e;
-        }
-
-        private void UpdateEntity(MissionEntity entity, Mission m)
-        {
-            entity.Name = m.Name;
-            entity.Budget = m.Budget;
-            entity.Duration = m.Duration;
-
-            if (m is OrbitalMission o)
-            {
-                entity.CurrHeight = o.CurrHeight;
-                entity.TargetHeight = o.TargetHeight;
-                entity.Inclination = o.Inclination;
-                entity.EnergySource = (int)o.EnergySource;
-            }
-            else if (m is PlanetaryMission p)
-            {
-                entity.Planet = p.Planet;
-                entity.AtmoDensity = p.AtmoDensity;
-                entity.LandingPointName = p.LandingPoint.Name;
-                entity.LandingPointX = p.LandingPoint.X;
-                entity.LandingPointY = p.LandingPoint.Y;
-                entity.LandingPointR = p.LandingPoint.R;
-            }
         }
     }
 }
