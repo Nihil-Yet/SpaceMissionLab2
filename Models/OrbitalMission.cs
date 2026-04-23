@@ -98,17 +98,6 @@ namespace SpaceMission.Models
             MissionType = MissionT.Orbital;
         }
 
-        private string StrEnergySource()
-        {
-            return energySource switch
-            {
-                EnergySource.None => "None",
-                EnergySource.RTG => "RTG",
-                EnergySource.Solar => "Solar",
-                _ => "Unknown"
-            };
-        }
-
         // Изменение текущей высоты (например, для манёвра)
         public double ChangeOrbit(double delta)
         {
@@ -213,12 +202,15 @@ namespace SpaceMission.Models
 
         public override string GetInfo()
         {
+            OrbitState ots = OrbitState();
             return $"{base.GetInfo()}\n" +
                    $"Mission type: Orbital\n" +
+                   $"Orbital type: {ots.Type.ToString()}\n" +
+                   $"Period: {ots.Period} min\n" +
                    $"Current orbital height: {currHeight} km\n" +
                    $"Target height: {targetHeight} km\n" +
                    $"Inclination: {inclination}°\n" +
-                   $"Energy Source: {StrEnergySource()}";
+                   $"Energy Source: {energySource.ToString()}";
         }
     }
 }
