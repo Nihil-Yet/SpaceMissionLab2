@@ -4,6 +4,7 @@ using SpaceMission.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System;
 
 namespace SpaceMission.Services
 {
@@ -25,11 +26,13 @@ namespace SpaceMission.Services
         {
             _context = context;
             _earthData = earthData;
+            Console.WriteLine($"DB path: {System.IO.Path.GetFullPath("missions.db")}");
         }
 
         public async Task<List<Mission>> GetAllAsync()
         {
             var bases = await _context.Missions
+                .AsNoTracking()
                 .Include(m => m.Orbital)
                 .Include(m => m.Planetary)
                 .ToListAsync();
