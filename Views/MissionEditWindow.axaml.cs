@@ -11,9 +11,15 @@ namespace SpaceMission.Views
             InitializeComponent();
         }
 
-        private void SaveClick(object sender, RoutedEventArgs e)
+        private async void OkClick(object sender, RoutedEventArgs e)
         {
-            if (DataContext is MissionEditViewModel vm) vm.SaveCommand.Execute(null);
+            if (DataContext is MissionEditViewModel vm)
+            {
+                if (vm.IsDevMode)
+                {
+                    vm.SaveCommand.Execute(null);
+                }
+            }
             Close(true);
         }
 

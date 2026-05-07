@@ -11,28 +11,55 @@ namespace SpaceMission.ViewModels
         private readonly IPlanetaryData _earthData;
         private readonly bool _isNewMode;
 
-        [ObservableProperty] private string _name = string.Empty;
+        // User mode
+        [ObservableProperty] private bool _isDevMode = false;
+        public bool IsNormalMode => !IsDevMode;
 
-        [ObservableProperty] private int? _budget;          // nullable
-        [ObservableProperty] private int? _duration;        // nullable
+        // Для отображения в обычном режиме
+        public string ReadOnlyName => _existingMission?.Name ?? string.Empty;
+        public int ReadOnlyBudget => _existingMission?.Budget ?? 0;
+        public int ReadOnlyDuration => _existingMission?.Duration ?? 0;
+        public double ReadOnlyCurrHeight => (_existingMission as OrbitalMission)?.CurrHeight ?? 0;
+        public double ReadOnlyTargetHeight => (_existingMission as OrbitalMission)?.TargetHeight ?? 0;
+
+        // Параметры для команд
+        [ObservableProperty] private int _extendDays;
+        [ObservableProperty] private double _orbitDelta;
+        [ObservableProperty] private double _newTargetHeight;
+        [ObservableProperty] private string _newLandingName = string.Empty;
+        [ObservableProperty] private short _newLandingX;
+        [ObservableProperty] private short _newLandingY;
+        [ObservableProperty] private short _newLandingR;
+
+        // Команды для обычного режима
+        public IRelayCommand ExtendMissionCommand { get; }
+        public IRelayCommand ChangeOrbitCommand { get; }      // только для Orbital
+        public IRelayCommand SetTargetHeightCommand { get; }  // только для Orbital
+        public IRelayCommand SetLandingPointCommand { get; }   // только для Planetary
+
+        // DevMode поля
+        [ObservableProperty] private string _name = string.Empty;
+        [ObservableProperty] private int? _budget;
+        [ObservableProperty] private int? _duration;
 
         // Orbital
         [ObservableProperty] private bool _isOrbital;
-        [ObservableProperty] private double? _currHeight;    // nullable
-        [ObservableProperty] private double? _targetHeight;  // nullable
-        [ObservableProperty] private double? _inclination;   // nullable
+        [ObservableProperty] private double? _currHeight;
+        [ObservableProperty] private double? _targetHeight;
+        [ObservableProperty] private double? _inclination;
         [ObservableProperty] private EnergySource _energySource;
         public List<EnergySource> EnergySources { get; } = new() { EnergySource.None, EnergySource.RTG, EnergySource.Solar };
 
         // Planetary
         [ObservableProperty] private bool _isPlanetary;
         [ObservableProperty] private string _planet = string.Empty;
-        [ObservableProperty] private byte? _atmoDensity;     // nullable
+        [ObservableProperty] private byte? _atmoDensity;
         [ObservableProperty] private string _landingPointName = string.Empty;
-        [ObservableProperty] private short? _landingPointX;  // nullable
-        [ObservableProperty] private short? _landingPointY;  // nullable
-        [ObservableProperty] private short? _landingPointR;  // nullable
+        [ObservableProperty] private short? _landingPointX;
+        [ObservableProperty] private short? _landingPointY;
+        [ObservableProperty] private short? _landingPointR;
 
+        // Команда сохранения
         public IRelayCommand SaveCommand { get; }
 
         // Результат для новой миссии
@@ -72,7 +99,7 @@ namespace SpaceMission.ViewModels
             }
             else
             {
-                // Новая миссия – все поля пустые (null или пустые строки)
+                // Новая миссия – все поля пустые
                 Name = string.Empty;
                 Budget = null;
                 Duration = null;
@@ -81,7 +108,7 @@ namespace SpaceMission.ViewModels
                     CurrHeight = null;
                     TargetHeight = null;
                     Inclination = null;
-                    EnergySource = EnergySource.None; // значение по умолчанию, но пользователь может выбрать
+                    EnergySource = EnergySource.None;
                 }
                 if (IsPlanetary)
                 {
@@ -95,6 +122,10 @@ namespace SpaceMission.ViewModels
             }
 
             SaveCommand = new RelayCommand(Save);
+            ExtendMissionCommand = new RelayCommand(ExtendMission);
+            ChangeOrbitCommand = new RelayCommand(ChangeOrbit, () => IsOrbital);
+            SetTargetHeightCommand = new RelayCommand(SetTargetHeight, () => IsOrbital);
+            SetLandingPointCommand = new RelayCommand(SetLandingPoint, () => IsPlanetary);
         }
 
         private void Save()
@@ -107,11 +138,11 @@ namespace SpaceMission.ViewModels
                 else if (IsPlanetary)
                     ResultMission = CreatePlanetaryMission();
                 else
-                    return; // неизвестный тип
+                    return;
             }
             else
             {
-                // Обновляем существующую миссию
+                // Обновляем существующую миссию (DevMode)
                 if (_existingMission != null)
                 {
                     _existingMission.Name = Name;
@@ -139,9 +170,43 @@ namespace SpaceMission.ViewModels
             }
         }
 
+        partial void OnIsDevModeChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsNormalMode));
+        }
+
+        private void ExtendMission()
+        {
+            if (_existingMission != null && ExtendDays > 0)
+                _existingMission.ExtendMission(ExtendDays);
+            OnPropertyChanged(nameof(ReadOnlyDuration));
+        }
+
+        private void ChangeOrbit()
+        {
+            if (_existingMission is OrbitalMission om && OrbitDelta != 0)
+                om.ChangeOrbit(OrbitDelta);
+            OnPropertyChanged(nameof(ReadOnlyCurrHeight));
+        }
+
+        private void SetTargetHeight()
+        {
+            if (_existingMission is OrbitalMission om && NewTargetHeight > 0)
+                om.SetTargetHeight(NewTargetHeight);
+            OnPropertyChanged(nameof(ReadOnlyTargetHeight));
+        }
+
+        private void SetLandingPoint()
+        {
+            if (_existingMission is PlanetaryMission pm)
+            {
+                var newPoint = new LandingPoint(NewLandingName, NewLandingX, NewLandingY, NewLandingR);
+                pm.SetLandingPoint(newPoint);
+            }
+        }
+
         private Mission CreateOrbitalMission()
         {
-            // Проверяем, какие поля заполнены
             bool hasName = !string.IsNullOrWhiteSpace(Name);
             bool hasBudget = Budget.HasValue && Budget.Value > 0;
             bool hasDuration = Duration.HasValue && Duration.Value > 0;
@@ -149,7 +214,6 @@ namespace SpaceMission.ViewModels
 
             if (hasName && hasBudget && hasDuration && hasOrbitParams)
             {
-                // Полный конструктор
                 return new OrbitalMission(
                     Name, Budget!.Value, Duration!.Value,
                     CurrHeight!.Value, TargetHeight!.Value, Inclination!.Value,
@@ -157,12 +221,10 @@ namespace SpaceMission.ViewModels
             }
             else if (hasName && hasBudget)
             {
-                // Конструктор с именем и бюджетом (длительность 180, стандартные орбитальные параметры)
                 return new OrbitalMission(Name, Budget!.Value);
             }
             else
             {
-                // Конструктор по умолчанию
                 return new OrbitalMission();
             }
         }
@@ -179,7 +241,6 @@ namespace SpaceMission.ViewModels
 
             if (hasName && hasBudget && hasDuration && hasPlanet && hasAtmo && hasLanding)
             {
-                // Полный конструктор
                 return new PlanetaryMission(
                     Name, Budget!.Value, Duration!.Value,
                     Planet, AtmoDensity!.Value,
@@ -187,12 +248,10 @@ namespace SpaceMission.ViewModels
             }
             else if (hasName && hasBudget && hasPlanet)
             {
-                // Конструктор с именем, бюджетом и планетой (длительность 365, плотность атмосферы 100, точка посадки Default)
                 return new PlanetaryMission(Name, Budget!.Value, Planet);
             }
             else
             {
-                // Конструктор по умолчанию
                 return new PlanetaryMission();
             }
         }
