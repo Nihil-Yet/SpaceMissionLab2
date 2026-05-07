@@ -3,7 +3,10 @@
         x:Class="SpaceMission.Views.MissionEditWindow"
         Title="Edit Mission" Width="500" Height="550">
     <StackPanel Margin="10">
-        <CheckBox Content="Dev Mode (прямое редактирование)" IsChecked="{Binding IsDevMode}" Margin="0,0,0,10"/>
+        <CheckBox Content="Dev Mode (прямое редактирование)" 
+          IsChecked="{Binding IsDevMode}" 
+          Margin="0,0,0,10"
+          IsVisible="{Binding IsModeSwitchVisible}"/>
 
         <!-- Обычный режим (не DevMode) -->
         <StackPanel IsVisible="{Binding IsNormalMode}">

@@ -11,6 +11,8 @@ namespace SpaceMission.ViewModels
         private readonly IPlanetaryData _earthData;
         private readonly bool _isNewMode;
 
+        public bool IsModeSwitchVisible => !_isNewMode;
+
         // User mode
         [ObservableProperty] private bool _isDevMode = false;
         public bool IsNormalMode => !IsDevMode;
@@ -99,6 +101,7 @@ namespace SpaceMission.ViewModels
             }
             else
             {
+                IsDevMode = true;
                 // Новая миссия – все поля пустые
                 Name = string.Empty;
                 Budget = null;
