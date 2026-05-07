@@ -10,7 +10,7 @@ namespace SpaceMission.Views
             InitializeComponent();
         }
 
-        private void OkClick(object sender, RoutedEventArgs e)
+        private void CloseClick(object sender, RoutedEventArgs e)
         {
             Close();
         }

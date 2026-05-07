@@ -115,10 +115,9 @@ namespace SpaceMission.ViewModels
         private async Task ShowDetails()
         {
             if (SelectedMission == null) return;
-            var info = $"{SelectedMission.GetInfo()}\n\n" +
-                       $"Risk: {SelectedMission.CalcRisk():P}\n" +
-                       $"Fuel: {SelectedMission.CalcFuelConsumption():F2} units";
-            var dialog = new InfoDialog { DataContext = new { Info = info } };
+
+            var vm = new InfoDialogViewModel(SelectedMission);
+            var dialog = new InfoDialog { DataContext = vm };
             await dialog.ShowDialog(GetMainWindow());
         }
 
