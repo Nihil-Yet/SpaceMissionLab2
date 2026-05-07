@@ -70,18 +70,23 @@ namespace SpaceMission.ViewModels
             var result = await dialog.ShowDialog<bool?>(GetMainWindow());
             if (result == true)
             {
-                Mission newMission;
+                MissionEditViewModel editVm;
                 if (dialog.SelectedType == "Orbital")
-                    newMission = new OrbitalMission("New Orbital", 1000000, 180, 500, 500, 0, EnergySource.Solar, _earthData);
+                {
+                    editVm = new MissionEditViewModel(null, _earthData, isNew: true);
+                    editVm.IsOrbital = true;
+                }
                 else
-                    newMission = new PlanetaryMission("New Planetary", 1000000, 365, "Mars", 100, new LandingPoint("Default", 0, 0, 0));
+                {
+                    editVm = new MissionEditViewModel(null, _earthData, isNew: true);
+                    editVm.IsPlanetary = true;
+                }
 
-                var editVm = new MissionEditViewModel(newMission, _earthData);
                 var editWindow = new MissionEditWindow { DataContext = editVm };
                 var editResult = await editWindow.ShowDialog<bool?>(GetMainWindow());
-                if (editResult == true)
+                if (editResult == true && editVm.ResultMission != null)
                 {
-                    await _repository.AddAsync(newMission);
+                    await _repository.AddAsync(editVm.ResultMission);
                     await LoadMissions();
                 }
             }
